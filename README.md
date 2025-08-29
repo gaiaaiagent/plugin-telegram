@@ -9,9 +9,41 @@ This plugin integrates a Telegram client with ElizaOS, allowing characters in El
 - **Startup Logging**: Logs successful initialization of the Telegram client for better debugging.
 - **Future-proof Design**: Provides a basic structure for stopping the client (currently unsupported).
 
+## 🚨 CRITICAL: Character Schema Requirements
+
+ElizaOS has **strict character schema validation**. Plugin configuration options must be placed in the `settings` object, NOT at the root level.
+
+### ❌ WRONG Configuration (causes validation failure):
+```json
+{
+  "name": "MyBot",
+  "clients": ["telegram"],           // ❌ NOT allowed at root level
+  "allowDirectMessages": true,       // ❌ NOT allowed at root level
+  "plugins": ["@elizaos/plugin-telegram"]
+}
+```
+
+### ✅ CORRECT Configuration:
+```json
+{
+  "name": "MyBot", 
+  "username": "mybot",
+  "bio": "My Telegram bot",           // Required field
+  "plugins": ["@elizaos/plugin-telegram"],
+  "settings": {
+    "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
+    "clients": ["telegram"],         // ✅ Must be in settings
+    "allowDirectMessages": true,     // ✅ Must be in settings
+    "shouldOnlyJoinInAllowedGroups": false,
+    "messageTrackingLimit": 100
+  },
+  "secrets": {}
+}
+```
+
 ## Configuration Options
 
-Here are the available configuration options for the `character.json` file:
+Here are the available configuration options for the `settings` section of your `character.json` file:
 
 | Key                             | Type    | Default  | Description                                                                                         |
 | ------------------------------- | ------- | -------- | --------------------------------------------------------------------------------------------------- |
