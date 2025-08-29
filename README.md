@@ -31,15 +31,32 @@ ElizaOS has **strict character schema validation**. Plugin configuration options
   "bio": "My Telegram bot",           // Required field
   "plugins": ["@elizaos/plugin-telegram"],
   "settings": {
-    "TELEGRAM_BOT_TOKEN": "${TELEGRAM_BOT_TOKEN}",
     "clients": ["telegram"],         // ✅ Must be in settings
     "allowDirectMessages": true,     // ✅ Must be in settings
     "shouldOnlyJoinInAllowedGroups": false,
     "messageTrackingLimit": 100
+    // API keys automatically loaded from CHARACTER.MYBOT.TELEGRAM_BOT_TOKEN
   },
   "secrets": {}
 }
 ```
+
+### Environment Variables
+
+ElizaOS automatically loads environment variables using the pattern: `CHARACTER.{CHARACTER_NAME}.{SETTING_KEY}`
+
+```bash
+# .env file - Use this naming convention
+CHARACTER.MYBOT.TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+CHARACTER.MYBOT.OPENAI_API_KEY=your-openai-key
+
+# For character name "My Agent" → "MY_AGENT"
+CHARACTER.MY_AGENT.TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+```
+
+**Important:** 
+- ❌ Don't use `${VARIABLE}` syntax in character files - ElizaOS doesn't support this
+- ✅ Use the `CHARACTER.{NAME}.*` environment variable pattern instead
 
 ## Configuration Options
 
