@@ -329,6 +329,45 @@ export class MessageManager {
       const chat = message.chat as Chat;
       const channelType = getChannelType(chat);
 
+      // Check if mention-only mode is enabled
+      const mentionOnlyMode = this.runtime.getSetting('TELEGRAM_ONLY_RESPOND_WHEN_MENTIONED') === 'true' ||
+                             this.runtime.getSetting('TELEGRAM_ONLY_RESPOND_WHEN_MENTIONED') === true;
+      
+      if (mentionOnlyMode && channelType !== ChannelType.DM) {
+        // Check if message mentions the bot
+        const botUsername = this.runtime.getSetting('TELEGRAM_BOT_USERNAME') as string;
+        const agentName = this.runtime.character?.name;
+        
+        // Check various mention patterns
+        const isMentioned = 
+          // Direct @mention
+          (botUsername && fullText.toLowerCase().includes(`@${botUsername.toLowerCase()}`)) ||
+          // Name mention
+          (agentName && fullText.toLowerCase().includes(agentName.toLowerCase())) ||
+          // Check if message has mention entities pointing to our bot
+          (message.entities?.some(entity => 
+            entity.type === 'mention' && 
+            message.text?.substring(entity.offset, entity.offset + entity.length).toLowerCase() === `@${botUsername?.toLowerCase()}`
+          )) ||
+          // Reply to bot's message
+          ('reply_to_message' in message && message.reply_to_message?.from?.is_bot);
+        
+        // Random response chance
+        const randomRate = parseFloat(this.runtime.getSetting('TELEGRAM_RANDOM_RESPONSE_RATE') as string || '0.01');
+        const shouldRandomlyRespond = Math.random() < randomRate;
+        
+        if (!isMentioned && !shouldRandomlyRespond) {
+          logger.log(`[Mention-only mode] Ignoring message - not mentioned (random chance: ${(randomRate * 100).toFixed(1)}%)`);
+          return;
+        }
+        
+        if (isMentioned) {
+          logger.log('[Mention-only mode] Responding - bot was mentioned');
+        } else if (shouldRandomlyRespond) {
+          logger.log(`[Mention-only mode] Responding - random chance triggered (${(randomRate * 100).toFixed(1)}%)`);
+        }
+      }
+
       const sourceId = createUniqueUuid(this.runtime, '' + chat.id);
 
       await this.runtime.ensureConnection({
